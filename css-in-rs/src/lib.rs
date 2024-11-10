@@ -93,7 +93,6 @@
 //! }
 //! # }
 //! ```
-
 #![cfg_attr(feature = "unstable-doc-cfg", feature(doc_cfg))]
 
 #[doc_cfg(feature = "dioxus")]
@@ -166,38 +165,17 @@ impl Theme for EmptyTheme {
 ///     }
 /// }
 /// ```
-pub trait Classes: Sized + 'static {
+pub trait Classes: Sized {
     /// The [Theme] which this style depend on
     type Theme: Theme;
 
-    /// Generate the CSS rules. Use the provided `counter` to obtain unique classnames and
-    /// increment it accordingly. The content of the rules may depend on the given theme,
-    /// but the classnames must be the same whenever this method is called. The classnames
-    /// must only depend on the `counter`, because they are cached.
-    ///
-    /// It is important that the number of classes does not change either. The runtime will
-    /// panic if a second call to `generate` returns a different counter than the first time.
-    ///
-    /// Usually, this method will introduce an arbitrary number `n` of the css classes and
-    /// increment the counter by exactly `n`. This `n` is usually a fixed constant
     fn generate(theme: &Self::Theme, css: &mut String, counter: &mut u64);
-
-    /// The styles generated in [Self::generate] use unreadable classnames. The struct implementing
-    /// this type should provide the user a way to access those classnames. The `start`
-    /// parameter is the same as the `counter` param used in [Self::generate], which is necessary
-    /// because the dynamic classnames will depend on it.
     fn new(start: u64) -> Self;
 
-    /// Mount this style and return a reference to the classnames (which are represented by
-    /// `Self`).
-    /// Note that the style will only be mounted once, even if you use this
-    /// hook from multiple components or your components will be used multiple
-    /// times. The classnames will be the same every time, as long as the
-    /// same [StyleProvider] is used, which is taken from the current context.
     #[doc_cfg(feature = "dioxus")]
-    fn use_style(cx: &ScopeState) -> &Self {
-        let provider = use_style_provider(cx);
-        provider.use_styles(cx)
+    fn use_style() -> Self {
+        let provider = use_style_provider();
+        provider.use_styles()
     }
 }
 
@@ -205,14 +183,13 @@ pub trait Classes: Sized + 'static {
 /// to `window.document.head`
 #[doc_cfg(feature = "dioxus")]
 pub fn use_style_provider_quickstart<'a, T: Theme>(
-    cx: &'a ScopeState,
     make_theme: impl FnOnce() -> T,
-) -> &'a StyleProvider<T> {
-    let provider = cx.use_hook(|| StyleProvider::quickstart_web(make_theme()));
-    use_context_provider(cx, || provider.clone())
+) -> StyleProvider<T> {
+    let provider = use_hook(|| StyleProvider::quickstart_web(make_theme()));
+    use_context_provider(|| provider.clone())
 }
 
 #[doc_cfg(feature = "dioxus")]
-pub fn use_style_provider<T: Theme>(cx: &ScopeState) -> &StyleProvider<T> {
-    use_context(cx).unwrap()
+pub fn use_style_provider<T: Theme>() -> StyleProvider<T> {
+    use_context()
 }

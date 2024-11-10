@@ -2,7 +2,7 @@ use core::cell::RefCell;
 use std::{collections::btree_map::Entry, rc::Rc};
 
 #[doc_cfg(feature = "dioxus")]
-use dioxus::core::ScopeState;
+use dioxus::prelude::*;
 
 use doc_cfg::doc_cfg;
 
@@ -84,11 +84,11 @@ impl<T: Theme> StyleProvider<T> {
     /// times. The classnames will be the same every time, as long as the
     /// same [StyleProvider] is used.
     #[doc_cfg(feature = "dioxus")]
-    pub fn use_styles<'a, C>(&self, cx: &'a ScopeState) -> &'a C
+    pub fn use_styles<C>(&self) -> C
     where
         C: Classes<Theme = T>,
     {
-        cx.use_hook(|| self.add_classes())
+        self.add_classes()
     }
 }
 
